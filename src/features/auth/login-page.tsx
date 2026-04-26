@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { BarChart3, LockKeyhole, ShieldCheck } from 'lucide-react'
+import { BarChart3, Eye, EyeOff, LockKeyhole, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
   const isLoggingIn = useAuthStore((state) => state.isLoggingIn)
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const {
     formState: { errors },
     handleSubmit,
@@ -110,14 +112,25 @@ export default function LoginPage() {
             </Field>
 
             <Field label="Senha" htmlFor="password" error={errors.password?.message}>
-              <input
-                id="password"
-                type="password"
-                className="input"
-                placeholder="Informe sua senha"
-                autoComplete="current-password"
-                {...register('password')}
-              />
+              <div className="input-action-wrap">
+                <input
+                  id="password"
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  className="input input-with-action"
+                  placeholder="Informe sua senha"
+                  autoComplete="current-password"
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  className="input-action-button"
+                  onClick={() => setIsPasswordVisible((current) => !current)}
+                  aria-label={isPasswordVisible ? 'Ocultar senha' : 'Exibir senha'}
+                  title={isPasswordVisible ? 'Ocultar senha' : 'Exibir senha'}
+                >
+                  {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </Field>
 
             <Button
