@@ -10,6 +10,7 @@ const titles: Record<string, string> = {
   '/dashboard': 'Painel Comercial',
   '/leads': 'Gestao de Leads',
   '/opportunities': 'Funil de Oportunidades',
+  '/pipelines': 'Configuracao de Funis',
 }
 
 interface TopbarProps {
