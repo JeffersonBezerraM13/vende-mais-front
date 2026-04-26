@@ -246,6 +246,40 @@
     box-shadow 160ms ease;
 }
 
+.input-action-wrap {
+  position: relative;
+}
+
+.input-with-action {
+  padding-right: 46px;
+}
+
+.input-action-button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.input-action-button:hover {
+  color: var(--text);
+}
+
+.input-action-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+}
+
 .textarea {
   min-height: 118px;
   padding-block: 12px;
@@ -588,11 +622,16 @@
   gap: 8px;
 }
 
-.card-grid,
-.pipeline-grid {
+.card-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.pipeline-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .entity-card,
@@ -941,6 +980,10 @@
     grid-template-columns: 1fr;
   }
 
+  .pipeline-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .form-grid-full {
     grid-column: auto;
   }
@@ -956,5 +999,11 @@
 
   .search-field {
     min-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .pipeline-grid {
+    grid-template-columns: 1fr;
   }
 }
