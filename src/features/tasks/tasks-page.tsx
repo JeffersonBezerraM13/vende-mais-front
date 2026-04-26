@@ -641,17 +641,19 @@ export default function TasksPage() {
                       <Check size={16} />
                     </button>
                   ) : null}
-                  <button
-                    className="icon-button"
-                    onClick={() => {
-                      setEditingTask(task)
-                      setIsFormOpen(true)
-                    }}
-                    aria-label={`Editar tarefa ${task.title}`}
-                    title="Editar a tarefa"
-                  >
-                    <Pencil size={16} />
-                  </button>
+                  {task.taskStatus !== 'COMPLETED' ? (
+                    <button
+                      className="icon-button"
+                      onClick={() => {
+                        setEditingTask(task)
+                        setIsFormOpen(true)
+                      }}
+                      aria-label={`Editar tarefa ${task.title}`}
+                      title="Editar a tarefa"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  ) : null}
                   <button
                     className="icon-button danger"
                     onClick={() => setTaskToDelete(task)}
