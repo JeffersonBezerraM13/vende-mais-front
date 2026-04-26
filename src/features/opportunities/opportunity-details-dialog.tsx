@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { AppDialog } from '@/components/ui/dialog'
 import { SOLUTION_LABELS } from '@/utils/constants'
 import { formatCurrency, formatDate } from '@/utils/format'
-import {getOpportunityLifecycle, getOpportunityLifecycleLabel, OpportunityLifecycle} from '@/utils/opportunities'
+import { getOpportunityLifecycle, getOpportunityLifecycleLabel } from '@/utils/opportunities'
 
 import type {
   LeadResponseDTO,
@@ -73,7 +73,7 @@ export function OpportunityDetailsDialog({
             </div>
             <div>
               <Funnel size={16} />
-              <span>{pipeline?.title || `Pipeline #${opportunity.pipelineId}`}</span>
+              <span>{pipeline?.title || `Funil #${opportunity.pipelineId}`}</span>
             </div>
 
           </div>
@@ -88,11 +88,11 @@ export function OpportunityDetailsDialog({
             </div>
             <div>
               <span>Etapa Atual:</span>
-              <strong>{opportunity.currentStageName || 'Sem stage'}</strong>
+              <strong>{opportunity.currentStageName || 'Sem etapa'}</strong>
             </div>
             <div>
               <span>Data de fechamento:</span>
-              <strong>{formatDate(opportunity.closeDate)}</strong>
+              <strong>{formatDate(opportunity.closedAt)}</strong>
             </div>
 
             {getOpportunityLifecycle(opportunity) === 'lost' && (

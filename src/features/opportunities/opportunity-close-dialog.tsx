@@ -75,11 +75,19 @@ export function OpportunityCloseDialog({
       description={opportunity ? opportunity.title : undefined}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title="Cancelar fechamento da oportunidade"
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            Confirmar Fechamento
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title="Confirmar fechamento da oportunidade"
+          >
+            Confirmar fechamento
           </Button>
         </>
       }

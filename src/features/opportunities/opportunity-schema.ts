@@ -9,6 +9,7 @@ export const opportunitySchema = z.object({
     'FISCAL_ADDRESS',
     'COMMERCIAL_ADDRESS',
     'AUDITORIUM',
+    'NOT_SPECIFIED',
   ]),
   estimatedValue: z.string().refine(
     (value) => !value || !Number.isNaN(Number(value)),

@@ -5,11 +5,15 @@ export type OpportunityLifecycle = 'open' | 'won' | 'lost'
 export function getOpportunityLifecycle(
   opportunity: OpportunityResponseDTO,
 ): OpportunityLifecycle {
-  if (!opportunity.closeDate) {
+  if (!opportunity.closedAt) {
     return 'open'
   }
 
   return opportunity.won ? 'won' : 'lost'
+}
+
+export function isOpportunityClosed(opportunity: OpportunityResponseDTO) {
+  return getOpportunityLifecycle(opportunity) !== 'open'
 }
 
 export function getOpportunityLifecycleLabel(

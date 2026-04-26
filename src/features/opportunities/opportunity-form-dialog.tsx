@@ -145,15 +145,31 @@ export function OpportunityFormDialog({
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={opportunity ? 'Editar Oportunidade' : 'Nova Oportunidade'}
+      title={opportunity ? 'Editar oportunidade' : 'Nova oportunidade'}
       size="lg"
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title={
+              opportunity
+                ? 'Cancelar edição da oportunidade'
+                : 'Cancelar criação da oportunidade'
+            }
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            {opportunity ? 'Salvar Alterações' : 'Criar Oportunidade'}
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title={
+              opportunity
+                ? 'Salvar alterações da oportunidade'
+                : 'Criar oportunidade'
+            }
+          >
+            {opportunity ? 'Salvar alterações' : 'Criar oportunidade'}
           </Button>
         </>
       }
@@ -227,7 +243,7 @@ export function OpportunityFormDialog({
           error={errors.currentStageId?.message}
           hint={
             !selectedPipelineId
-                ? 'Selecione um funil.'
+                ? 'Selecione um funil para carregar as etapas.'
                 : ''
           }
         >
@@ -270,11 +286,11 @@ export function OpportunityFormDialog({
           <div>
             <strong>Lead com oportunidade aberta identificada</strong>
             <p>
-              O backend informou que ja existe uma oportunidade aberta para esse
-              lead. O aviso e preventivo e nao bloqueia a criacao.
+              O backend informou que já existe uma oportunidade aberta para este
+              lead. O aviso é preventivo e não bloqueia a criação.
             </p>
           </div>
-          <Badge tone="warning">Atencao</Badge>
+          <Badge tone="warning">Atenção</Badge>
         </div>
       ) : null}
     </AppDialog>
