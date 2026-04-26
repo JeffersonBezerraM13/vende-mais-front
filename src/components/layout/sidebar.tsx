@@ -25,17 +25,19 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, mobileOpen, onNavigate }: SidebarProps) {
+  const isCompact = collapsed && !mobileOpen
+
   return (
     <aside
       className={clsx(
         'app-sidebar',
-        collapsed && 'is-collapsed',
+        isCompact && 'is-collapsed',
         mobileOpen && 'is-mobile-open',
       )}
     >
       <div className="sidebar-brand">
         <div className="sidebar-logo">VM</div>
-        {!collapsed ? (
+        {!isCompact ? (
           <div>
             <strong>VendeMais</strong>
             <span>CRM comercial</span>
@@ -57,7 +59,7 @@ export function Sidebar({ collapsed, mobileOpen, onNavigate }: SidebarProps) {
               onClick={onNavigate}
             >
               <Icon size={18} />
-              {!collapsed ? <span>{item.label}</span> : null}
+              {!isCompact ? <span>{item.label}</span> : null}
             </NavLink>
           )
         })}

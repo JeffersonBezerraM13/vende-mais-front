@@ -17,27 +17,40 @@ const titles: Record<string, string> = {
 
 interface TopbarProps {
   collapsed: boolean
+  isMobileViewport: boolean
+  mobileOpen: boolean
   onLogout: () => void
   onSidebarToggle: () => void
 }
 
 export function Topbar({
   collapsed,
+  isMobileViewport,
+  mobileOpen,
   onLogout,
   onSidebarToggle,
 }: TopbarProps) {
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
+  const sidebarExpanded = isMobileViewport ? mobileOpen : !collapsed
+  const sidebarToggleTitle = isMobileViewport
+    ? sidebarExpanded
+      ? 'Fechar menu lateral'
+      : 'Abrir menu lateral'
+    : sidebarExpanded
+      ? 'Recolher menu lateral'
+      : 'Expandir menu lateral'
 
   return (
     <header className="app-topbar">
       <div className="topbar-left">
         <button
-          className="icon-button desktop-only"
+          className="icon-button"
           onClick={onSidebarToggle}
-          title={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+          aria-label={sidebarToggleTitle}
+          title={sidebarToggleTitle}
         >
-          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {sidebarExpanded ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
         </button>
         <div>
           <strong>{titles[location.pathname] ?? 'VendeMais CRM'}</strong>
