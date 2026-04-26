@@ -19,7 +19,7 @@ export const taskSchema = z
     if (hasLead && hasOpportunity) {
       context.addIssue({
         code: 'custom',
-        message: 'A tarefa deve ter apenas um vínculo principal',
+        message: 'A tarefa deve ter apenas um vínculo principal.',
         path: ['relationType'],
       })
       return
@@ -28,7 +28,7 @@ export const taskSchema = z
     if (values.relationType === 'LEAD' && !hasLead) {
       context.addIssue({
         code: 'custom',
-        message: 'Selecione o lead vinculado a tarefa',
+        message: 'Selecione o lead vinculado à tarefa.',
         path: ['leadId'],
       })
     }
@@ -36,7 +36,7 @@ export const taskSchema = z
     if (values.relationType === 'OPPORTUNITY' && !hasOpportunity) {
       context.addIssue({
         code: 'custom',
-        message: 'Selecione a oportunidade vinculada a tarefa',
+        message: 'Selecione a oportunidade vinculada à tarefa.',
         path: ['opportunityId'],
       })
     }

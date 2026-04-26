@@ -49,22 +49,22 @@ interface RelationOption {
 const relationOptions: RelationOption[] = [
   {
     type: 'LEAD',
-    title: 'Vincular a Lead',
+    title: 'Vincular a um lead',
     badge: 'Lead',
-    fieldLabel: 'Lead Vinculado',
+    fieldLabel: 'Lead vinculado',
     placeholder: 'Selecione um lead',
-    emptyHint: 'Cadastre um lead antes.',
+    emptyHint: 'Cadastre um lead antes de continuar.',
     icon: User,
     tone: 'info',
     visualTone: 'lead',
   },
   {
     type: 'OPPORTUNITY',
-    title: 'Vincular a Oportunidade',
+    title: 'Vincular a uma oportunidade',
     badge: 'Oportunidade',
-    fieldLabel: 'Oportunidade Vinculada',
+    fieldLabel: 'Oportunidade vinculada',
     placeholder: 'Selecione uma oportunidade',
-    emptyHint: 'Cadastre uma oportunidade antes.',
+    emptyHint: 'Cadastre uma oportunidade antes de continuar.',
     icon: Briefcase,
     tone: 'primary',
     visualTone: 'opportunity',
@@ -98,7 +98,21 @@ function getLockedRelationType(task?: TaskResponseDTO | null): TaskRelationType 
     return 'OPPORTUNITY'
   }
 
-  return 'LEAD'
+  if (task.leadId) {
+    return 'LEAD'
+  }
+
+  return null
+}
+
+function getTaskDraftValues(task: TaskResponseDTO | null | undefined): TaskFormValues {
+  return {
+    ...emptyValues,
+    title: task?.title || '',
+    description: task?.description ?? '',
+    taskStatus: task?.taskStatus || 'PENDING',
+    dueDate: task?.dueDate ? task.dueDate.slice(0, 10) : '',
+  }
 }
 
 function getTaskValues(
@@ -106,10 +120,7 @@ function getTaskValues(
   relationType: TaskRelationType,
 ): TaskFormValues {
   return {
-    title: task?.title || '',
-    description: task?.description ?? '',
-    taskStatus: task?.taskStatus || 'PENDING',
-    dueDate: task?.dueDate ? task.dueDate.slice(0, 10) : '',
+    ...getTaskDraftValues(task),
     relationType,
     leadId: relationType === 'LEAD' && task?.leadId ? String(task.leadId) : '',
     opportunityId:
@@ -134,6 +145,7 @@ function SelectionCard({ onSelect, option }: SelectionCardProps) {
         className="task-selection-button"
         onClick={() => onSelect(option.type)}
         aria-label={option.title}
+        title={option.title}
       >
         <span className="task-selection-icon" aria-hidden="true">
           <Icon size={26} />
@@ -178,7 +190,13 @@ export function TaskFormDialog({
       return
     }
 
-    reset(lockedRelation ? getTaskValues(task, lockedRelation) : emptyValues)
+    reset(
+      lockedRelation
+        ? getTaskValues(task, lockedRelation)
+        : task
+          ? getTaskDraftValues(task)
+          : emptyValues,
+    )
   }, [lockedRelation, open, reset, task])
 
   function handleSelectRelation(type: TaskRelationType) {
@@ -239,25 +257,37 @@ export function TaskFormDialog({
     <AppDialog
       open={open}
       onOpenChange={handleDialogOpenChange}
-      title={task ? 'Editar Tarefa' : 'Nova Tarefa'}
+      title={task ? 'Editar tarefa' : 'Nova tarefa'}
       description={
         relationOption
           ? 'Preencha a atividade mantendo um único vínculo principal.'
-          : 'Escolha onde esta tarefa será ancorada.'
+          : 'Escolha onde esta tarefa será vinculada.'
       }
       size="lg"
       footer={
         relationOption ? (
           <>
-            <Button variant="ghost" onClick={handleCancel}>
+            <Button
+              variant="ghost"
+              onClick={handleCancel}
+              title={task ? 'Cancelar edição da tarefa' : 'Cancelar criação da tarefa'}
+            >
               Cancelar
             </Button>
-            <Button loading={loading} onClick={() => void submit()}>
-              {task ? 'Salvar Tarefa' : 'Criar Tarefa'}
+            <Button
+              loading={loading}
+              onClick={() => void submit()}
+              title={task ? 'Salvar alterações da tarefa' : 'Criar tarefa'}
+            >
+              {task ? 'Salvar tarefa' : 'Criar tarefa'}
             </Button>
           </>
         ) : (
-          <Button variant="ghost" onClick={handleCancel}>
+          <Button
+            variant="ghost"
+            onClick={handleCancel}
+            title="Cancelar criação da tarefa"
+          >
             Cancelar
           </Button>
         )
@@ -266,7 +296,7 @@ export function TaskFormDialog({
       {!relationOption ? (
         <div className="task-selection-shell">
           <div>
-            <h3>Vínculo Principal</h3>
+            <h3>Vínculo principal</h3>
           </div>
           <div className="task-selection-grid">
             {relationOptions.map((option) => (
@@ -285,7 +315,7 @@ export function TaskFormDialog({
             error={relationError}
             hint={
               isEditing
-                ? 'O tipo do vínculo principal fica travado na edição.'
+                ? 'O tipo do vínculo principal permanece bloqueado na edição.'
                 : activeRelation === 'LEAD' && !leads.length
                 ? relationOption.emptyHint
                 : activeRelation === 'OPPORTUNITY' && !opportunities.length
