@@ -11,19 +11,39 @@ import { DataTable } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Loader } from '@/components/ui/loader'
 import { PageHeader } from '@/components/ui/page-header'
+import { Pagination } from '@/components/ui/pagination'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { UserDetailsDialog } from '@/features/users/user-details-dialog'
 import { UserFormDialog } from '@/features/users/user-form-dialog'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { createUser, deleteUser, listUsers, updateUser } from '@/services/api/users-service'
 import { getApiErrorInfo } from '@/services/http/errors'
-import { createLocalPage, fetchAllPages } from '@/services/http/pagination'
-import { ROLE_LABELS } from '@/utils/constants'
+import { DEFAULT_PAGE_SIZE, ROLE_LABELS, ROLE_OPTIONS } from '@/utils/constants'
 import { formatNumber } from '@/utils/format'
 import { isAdmin } from '@/utils/permissions'
-import { Pagination } from '@/components/ui/pagination'
 
 import type { UserFormValues } from '@/features/users/user-schema'
-import type { UserRequestDTO, UserResponseDTO } from '@/types/api'
+import type { UserRequestDTO, UserResponseDTO, UserRole, UserFilterParams } from '@/types/api'
+
+const USERS_SORT = 'name,asc'
+
+function buildUserListParams({
+  page,
+  role,
+  search,
+}: {
+  search: string
+  role: UserRole | ''
+  page: number
+}): UserFilterParams {
+  return {
+    search: search || undefined,
+    role: role || undefined,
+    page,
+    size: DEFAULT_PAGE_SIZE,
+    sort: USERS_SORT,
+  }
+}
 
 export default function UsersPage() {
   const queryClient = useQueryClient()
@@ -31,14 +51,23 @@ export default function UsersPage() {
   const canManage = isAdmin(currentUser)
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<UserRole | ''>('')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserResponseDTO | null>(null)
   const [editingUser, setEditingUser] = useState<UserResponseDTO | null>(null)
   const [userToDelete, setUserToDelete] = useState<UserResponseDTO | null>(null)
 
+  const debouncedSearch = useDebouncedValue(search)
+  const userListParams = buildUserListParams({
+    search: debouncedSearch,
+    role: roleFilter,
+    page,
+  })
+
   const usersQuery = useQuery({
-    queryKey: ['users'],
-    queryFn: () => fetchAllPages(listUsers, { size: 100, sort: 'name,asc' }),
+    queryKey: ['users', 'list', userListParams],
+    queryFn: () => listUsers(userListParams),
+    placeholderData: (previousData) => previousData,
   })
 
   const createMutation = useMutation({
@@ -65,29 +94,20 @@ export default function UsersPage() {
   })
 
   if (usersQuery.isLoading) {
-    return <Loader label="Carregando funcionários..." />
+    return <Loader label="Carregando usuários..." />
   }
 
   if (usersQuery.isError || !usersQuery.data) {
     return (
       <EmptyState
-        title="Falha ao Carregar Funcionários"
-        description="Verifique a autenticação."
+        title="Não foi possível carregar os usuários."
+        description="Verifique a autenticação e tente novamente."
       />
     )
   }
 
-  const users = usersQuery.data.filter((user) => {
-    const matchesSearch =
-      !search ||
-      [user.name, user.email, user.roles.join(' ')]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(search.toLowerCase()))
-
-    return matchesSearch
-  })
-
-  const localPage = createLocalPage(users, page)
+  const usersPage = usersQuery.data
+  const users = usersPage.content
 
   const handleSaveUser = async (values: UserFormValues) => {
     const payload: UserRequestDTO = {
@@ -112,7 +132,7 @@ export default function UsersPage() {
 
     try {
       await deleteMutation.mutateAsync(userToDelete.id)
-      toast.success('Usuario excluído com sucesso.')
+      toast.success('Usuário excluído com sucesso.')
     } catch (error) {
       toast.error(getApiErrorInfo(error).message)
     }
@@ -121,7 +141,7 @@ export default function UsersPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Funcionários"
+        title="Gestão de Usuários"
         actions={
           canManage ? (
             <Button
@@ -129,9 +149,10 @@ export default function UsersPage() {
                 setEditingUser(null)
                 setIsFormOpen(true)
               }}
+              title="Criar novo usuário"
             >
               <Plus size={16} />
-              Novo usuario
+              Novo usuário
             </Button>
           ) : null
         }
@@ -139,44 +160,64 @@ export default function UsersPage() {
 
       {!canManage ? (
         <Card className="notice-card">
-          <strong>Somente Leitura</strong>
-          <p>Seu perfil não possui as permissões de um administrador.</p>
+          <strong>Somente leitura</strong>
+          <p>Seu perfil não possui permissão para gerenciar usuários.</p>
         </Card>
       ) : null}
 
       <Card>
         <div className="toolbar">
-          <div className="search-field">
-            <Search size={16} />
-            <input
-              className="input"
-              placeholder="Buscar por nome, email ou permissões"
-              value={search}
-              onChange={(event) => {
-                setPage(0)
-                setSearch(event.target.value)
-              }}
-            />
+          <div className="toolbar-filters">
+            <Badge tone="info">
+              {formatNumber(usersPage.totalElements)}{' '}
+              {usersPage.totalElements === 1 ? 'usuário' : 'usuários'}
+            </Badge>
+            <div className="search-field">
+              <Search size={16} />
+              <input
+                  className="input"
+                  placeholder="Busque por nome ou e-mail..."
+                  value={search}
+                  onChange={(event) => {
+                    setPage(0)
+                    setSearch(event.target.value)
+                  }}
+              />
+            </div>
           </div>
           <div className="toolbar-filters">
-            <Badge tone="info">{formatNumber(users.length)} usuario(s)</Badge>
+            <select
+              className="input"
+              value={roleFilter}
+              onChange={(event) => {
+                setPage(0)
+                setRoleFilter(event.target.value as UserRole | '')
+              }}
+            >
+              <option value="">Todas as permissões</option>
+              {ROLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         <DataTable
-          data={localPage.content}
+          data={users}
           rowKey={(user) => user.id}
           emptyState={
             <EmptyState
               icon={<UserRound size={18} />}
-              title="Nenhum Funcionário Encontrado"
-              description="Ajuste o Filtro ou Cadastre um Novo Funcionário."
+              title="Nenhum usuário encontrado."
+              description="Ajuste os filtros ou cadastre um novo registro para continuar."
             />
           }
           columns={[
             {
               key: 'name',
-              header: 'Funcionário',
+              header: 'Usuário',
               cell: (user) => (
                 <div className="cell-stack">
                   <strong>{user.name}</strong>
@@ -203,7 +244,11 @@ export default function UsersPage() {
               className: 'cell-actions',
               cell: (user) => (
                 <div className="table-actions">
-                  <button className="icon-button" onClick={() => setSelectedUser(user)}>
+                  <button
+                    className="icon-button"
+                    onClick={() => setSelectedUser(user)}
+                    title="Ver detalhes do usuário"
+                  >
                     <Eye size={16} />
                   </button>
                   {canManage ? (
@@ -214,10 +259,15 @@ export default function UsersPage() {
                           setEditingUser(user)
                           setIsFormOpen(true)
                         }}
+                        title="Editar usuário"
                       >
                         <Pencil size={16} />
                       </button>
-                      <button className="icon-button danger" onClick={() => setUserToDelete(user)}>
+                      <button
+                        className="icon-button danger"
+                        onClick={() => setUserToDelete(user)}
+                        title="Excluir usuário"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </>
@@ -229,9 +279,9 @@ export default function UsersPage() {
         />
 
         <Pagination
-          page={localPage.page}
-          totalPages={localPage.totalPages}
-          totalItems={localPage.totalElements}
+          page={usersPage.number}
+          totalPages={usersPage.totalPages}
+          totalItems={usersPage.totalElements}
           onPageChange={setPage}
         />
       </Card>
@@ -261,8 +311,8 @@ export default function UsersPage() {
 
       <ConfirmDialog
         open={Boolean(userToDelete)}
-        title="Excluir Funcionário"
-        description={userToDelete ? `Deseja Remover o(a) ${userToDelete.name} ?` : ''}
+        title="Excluir usuário"
+        description={userToDelete ? `Deseja remover o usuário ${userToDelete.name}?` : ''}
         loading={deleteMutation.isPending}
         onOpenChange={(open) => {
           if (!open) {

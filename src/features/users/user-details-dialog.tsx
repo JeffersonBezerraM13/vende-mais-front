@@ -26,7 +26,7 @@ export function UserDetailsDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={user.name}
-      description="Dados de Acesso e roles retornadas pela API."
+      description="Dados de acesso e permissões retornadas pela API."
     >
       <div className="details-grid">
         <article className="detail-card">
@@ -39,7 +39,7 @@ export function UserDetailsDialog({
           </div>
         </article>
         <article className="detail-card">
-          <h3>Roles</h3>
+          <h3>Permissões</h3>
           <div className="detail-badges">
             {user.roles.length ? (
               user.roles.map((role) => (
@@ -49,7 +49,7 @@ export function UserDetailsDialog({
                 </Badge>
               ))
             ) : (
-              <span>Nenhuma role retornada</span>
+              <span>Nenhuma permissão retornada.</span>
             )}
           </div>
         </article>

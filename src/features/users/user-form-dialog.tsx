@@ -58,7 +58,7 @@ export function UserFormDialog({
   const submit = handleSubmit(async (values) => {
     try {
       await onSubmit(values)
-      toast.success(user ? 'Usuário Atualizado com Sucesso.' : 'Usuário Criado com Sucesso.')
+      toast.success(user ? 'Usuário atualizado com sucesso.' : 'Usuário criado com sucesso.')
       onOpenChange(false)
     } catch (error) {
       const apiError = getApiErrorInfo(error)
@@ -71,14 +71,22 @@ export function UserFormDialog({
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={user ? 'Editar Usuário' : 'Novo Usuário'}
+      title={user ? 'Editar usuário' : 'Novo usuário'}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title={user ? 'Cancelar edição do usuário' : 'Cancelar criação do usuário'}
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            {user ? 'Salvar Usuário' : 'Criar Usuário'}
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title={user ? 'Salvar alterações do usuário' : 'Criar usuário'}
+          >
+            {user ? 'Salvar usuário' : 'Criar usuário'}
           </Button>
         </>
       }
