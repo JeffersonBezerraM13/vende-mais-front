@@ -11,6 +11,7 @@ const titles: Record<string, string> = {
   '/leads': 'Gestao de Leads',
   '/opportunities': 'Funil de Oportunidades',
   '/pipelines': 'Configuracao de Funis',
+  '/tasks': 'Agenda Comercial',
 }
 
 interface TopbarProps {
