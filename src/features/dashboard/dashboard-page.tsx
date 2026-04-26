@@ -27,13 +27,13 @@ export default function DashboardPage() {
   })
 
   if (dashboardQuery.isLoading) {
-    return <Loader fullscreen={false} label="Montando dashboard..." />
+    return <Loader fullscreen={false} label="Carregando painel..." />
   }
 
   if (dashboardQuery.isError || !dashboardQuery.data) {
     return (
       <EmptyState
-        title="Não foi possível montar o dashboard"
+        title="Não foi possível carregar o painel."
         description="Verifique a autenticação e a disponibilidade do backend."
       />
     )
@@ -44,9 +44,7 @@ export default function DashboardPage() {
 
   return (
     <div className="page-stack">
-      <PageHeader
-        title="Dashboard"
-      />
+      <PageHeader title="Painel Comercial" />
 
       <section className="stats-grid">
         <StatCard
@@ -85,67 +83,69 @@ export default function DashboardPage() {
             <Badge tone="info">{formatNumber(totals.pipelines)} funis</Badge>
           </div>
 
-          {stageDistribution.length ? (
-            <div className="distribution-list">
-              {stageDistribution.map((item) => (
-                <article key={item.stage} className="distribution-row">
-                  <div>
-                    <strong>{item.stage}</strong>
+          <div className="dashboard-panel-body">
+            {stageDistribution.length ? (
+              <div className="distribution-list">
+                {stageDistribution.map((item) => (
+                  <article key={item.stage} className="distribution-row">
                     <div>
-                      <span>{formatNumber(item.total)} negócio(s)</span>
+                      <strong>{item.stage}</strong>
+                      <div>
+                        <span>{formatNumber(item.total)} negócio(s)</span>
+                      </div>
                     </div>
-
-                  </div>
-                  <div className="distribution-bar-track">
-                    <div
-                      className="distribution-bar-fill"
-                      style={{
-                        width: `${Math.max(
-                          12,
-                          (item.total / Math.max(stageDistribution[0]?.total ?? 1, 1)) * 100,
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="Sem oportunidades abertas"
-              description="Assim que existirem negócios em andamento, a distribuição por etapa aparece aqui."
-            />
-          )}
+                    <div className="distribution-bar-track">
+                      <div
+                        className="distribution-bar-fill"
+                        style={{
+                          width: `${Math.max(
+                            12,
+                            (item.total / Math.max(stageDistribution[0]?.total ?? 1, 1)) * 100,
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Nenhuma oportunidade aberta."
+                description="Assim que existirem negócios em andamento, a distribuição por etapa aparece aqui."
+              />
+            )}
+          </div>
         </Card>
 
         <Card className="dashboard-panel">
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Infraestrutura</p>
-              <h2>Funis Cadastrados</h2>
+              <h2>Funis de Vendas</h2>
             </div>
             <Funnel size={18} />
           </div>
-          <div className="stack-list">
-            {pipelines.length ? (
-              pipelines.map((pipeline) => (
-                <article key={pipeline.id} className="stack-row">
-                  <div>
-                    <strong>{pipeline.title}</strong>
+          <div className="dashboard-panel-body">
+            <div className="stack-list">
+              {pipelines.length ? (
+                pipelines.map((pipeline) => (
+                  <article key={pipeline.id} className="stack-row">
                     <div>
-                      <span>{pipeline.stages.length} etapas</span>
+                      <strong>{pipeline.title}</strong>
+                      <div>
+                        <span>{pipeline.stages.length} etapas</span>
+                      </div>
                     </div>
-
-                  </div>
-                  <Badge tone="neutral">{pipeline.stages.length}</Badge>
-                </article>
-              ))
-            ) : (
-              <EmptyState
-                title="Sem pipelines cadastrados"
-                description="Cadastre um pipeline para estruturar as etapas comerciais."
-              />
-            )}
+                    <Badge tone="neutral">{pipeline.stages.length}</Badge>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="Nenhum funil cadastrado."
+                  description="Cadastre um novo funil para continuar."
+                />
+              )}
+            </div>
           </div>
         </Card>
 
@@ -158,46 +158,50 @@ export default function DashboardPage() {
             <ChartNoAxesColumn size={18} />
           </div>
 
-          <div className="stack-list">
-            {recentOpportunities.length ? (
-              recentOpportunities.map((opportunity) => (
-                <article key={opportunity.id} className="activity-card">
-                  <div>
-                    <strong>{opportunity.title}</strong>
-                    <p
+          <div className="dashboard-panel-body">
+            <div className="stack-list">
+              {recentOpportunities.length ? (
+                recentOpportunities.map((opportunity) => (
+                  <article key={opportunity.id} className="activity-card">
+                    <div>
+                      <strong>{opportunity.title}</strong>
+                      <p
                         style={{
                           display: '-webkit-box',
-                          WebkitLineClamp: 2, // Limita o texto a no máximo 2 linhas
+                          WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
-                          wordBreak: 'break-word', // Garante que palavras gigantes não vazem horizontalmente
+                          wordBreak: 'break-word',
                         }}
-                    >{truncateText(opportunity.notes, 100)}</p>
-                  </div>
-                  <div className="activity-meta">
-                    <Badge
-                      tone={
-                        getOpportunityLifecycle(opportunity) === 'won'
-                          ? 'success'
-                          : getOpportunityLifecycle(opportunity) === 'lost'
-                            ? 'danger'
-                            : 'warning'
-                      }
-                    >
-                      {getOpportunityLifecycleLabel(opportunity)}
-                    </Badge>
-                    <span>{opportunity.currentStageName || 'Sem stage'}</span>
-                    <span>{formatCurrency(opportunity.estimatedValue)}</span>
-                    <small>Criada em {formatDate(opportunity.createdAt)}</small>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <EmptyState
-                title="Sem historico recente"
-                description="As oportunidades mais novas aparecerao aqui."
-              />
-            )}
+                      >
+                        {truncateText(opportunity.notes, 100)}
+                      </p>
+                    </div>
+                    <div className="activity-meta">
+                      <Badge
+                        tone={
+                          getOpportunityLifecycle(opportunity) === 'won'
+                            ? 'success'
+                            : getOpportunityLifecycle(opportunity) === 'lost'
+                              ? 'danger'
+                              : 'warning'
+                        }
+                      >
+                        {getOpportunityLifecycleLabel(opportunity)}
+                      </Badge>
+                      <span>{opportunity.currentStageName || 'Sem etapa'}</span>
+                      <span>{formatCurrency(opportunity.estimatedValue)}</span>
+                      <small>Criada em {formatDate(opportunity.createdAt)}</small>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="Sem histórico recente."
+                  description="As oportunidades mais recentes aparecerão aqui."
+                />
+              )}
+            </div>
           </div>
         </Card>
 
@@ -205,46 +209,50 @@ export default function DashboardPage() {
           <div className="panel-heading">
             <div>
               <p className="eyebrow">Agenda</p>
-              <h2>Proximas Tarefas</h2>
+              <h2>Próximas Tarefas</h2>
             </div>
             <CircleCheckBig size={18} />
           </div>
 
-          <div className="stack-list">
-            {upcomingTasks.length ? (
-              upcomingTasks.map((task) => (
-                <article key={task.id} className="stack-row">
-                  <div>
+          <div className="dashboard-panel-body">
+            <div className="stack-list">
+              {upcomingTasks.length ? (
+                upcomingTasks.map((task) => (
+                  <article key={task.id} className="stack-row">
                     <div>
-                      <strong>{task.title}</strong>
-                    </div>
-                    <div>
-                      <span
+                      <div>
+                        <strong>{task.title}</strong>
+                      </div>
+                      <div>
+                        <span
                           style={{
                             display: '-webkit-box',
-                            WebkitLineClamp: 2, // Limita o texto a no máximo 2 linhas
+                            WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
-                            wordBreak: 'break-word', // Garante que palavras gigantes não vazem horizontalmente
+                            wordBreak: 'break-word',
                           }}
-                      >{task.description || 'Sem descricao complementar'}</span>
+                        >
+                          {task.description || 'Sem descrição complementar'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="stack-row-meta">
-                    <Badge tone="info">{task.userName || 'Responsável não informado'}</Badge>
-                    <Badge tone={task.taskStatus === 'COMPLETED' ? 'success' : 'warning'}>
-                      {TASK_STATUS_LABELS[task.taskStatus || 'PENDING']}
-                    </Badge>
-                    <small>{formatDate(task.dueDate)}</small>
-                  </div>
-                </article>
-              ))
-            ) : (
-              <EmptyState
-                title="Nenhuma tarefa pendente"
-                description="O calendario comercial esta livre no momento."
-              />
-            )}
+                    <div className="stack-row-meta">
+                      <Badge tone="info">{task.userName || 'Responsável não informado'}</Badge>
+                      <Badge tone={task.taskStatus === 'COMPLETED' ? 'success' : 'warning'}>
+                        {TASK_STATUS_LABELS[task.taskStatus || 'PENDING']}
+                      </Badge>
+                      <small>{formatDate(task.dueDate)}</small>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <EmptyState
+                  title="Nenhuma tarefa pendente."
+                  description="O calendário comercial está livre no momento."
+                />
+              )}
+            </div>
           </div>
         </Card>
       </section>

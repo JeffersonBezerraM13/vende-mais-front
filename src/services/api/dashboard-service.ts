@@ -51,7 +51,7 @@ export async function getDashboardSnapshot() {
 
   const stageDistribution = Object.entries(
     openOpportunities.reduce<Record<string, number>>((accumulator, opportunity) => {
-      const stageName = opportunity.currentStageName || 'Sem stage'
+      const stageName = opportunity.currentStageName || 'Sem etapa'
       accumulator[stageName] = (accumulator[stageName] ?? 0) + 1
       return accumulator
     }, {}),
