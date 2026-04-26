@@ -8,6 +8,7 @@ import { isAdmin } from '@/utils/permissions'
 
 const titles: Record<string, string> = {
   '/dashboard': 'Painel Comercial',
+  '/leads': 'Gestao de Leads',
 }
 
 interface TopbarProps {
