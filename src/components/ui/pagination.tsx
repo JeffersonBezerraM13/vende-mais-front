@@ -15,17 +15,21 @@ export function Pagination({
   totalItems,
   totalPages,
 }: PaginationProps) {
+  const safeTotalPages = Math.max(totalPages, 1)
+  const safePage = Math.min(page, safeTotalPages - 1)
+
   return (
     <div className="pagination">
       <p className="pagination-info">
-        {totalItems} registro(s) • página {page + 1} de {totalPages}
+        {totalItems} {totalItems === 1 ? 'registro' : 'registros'} • página {safePage + 1} de{' '}
+        {safeTotalPages}
       </p>
       <div className="pagination-controls">
         <Button
           variant="ghost"
           size="sm"
-          disabled={page === 0}
-          onClick={() => onPageChange(page - 1)}
+          disabled={safePage === 0}
+          onClick={() => onPageChange(safePage - 1)}
         >
           <ChevronLeft size={16} />
           Anterior
@@ -33,8 +37,8 @@ export function Pagination({
         <Button
           variant="ghost"
           size="sm"
-          disabled={page + 1 >= totalPages}
-          onClick={() => onPageChange(page + 1)}
+          disabled={safePage + 1 >= safeTotalPages}
+          onClick={() => onPageChange(safePage + 1)}
         >
           Próxima
           <ChevronRight size={16} />

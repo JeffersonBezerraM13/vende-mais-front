@@ -3,20 +3,19 @@ import { buildPaginationParams } from '@/services/http/pagination'
 
 import type {
   PageResponse,
-  PaginationParams,
+  PipelineFilterParams,
   PipelineRequestDTO,
   PipelineResponseDTO,
   StageRequestDTO,
   StageResponseDTO,
 } from '@/types/api'
 
-export async function listPipelines(params: PaginationParams = {}) {
+export async function listPipelines(params: PipelineFilterParams = {}) {
   const response = await apiClient.get<PageResponse<PipelineResponseDTO>>(
     '/pipelines',
-    {
-      params: buildPaginationParams(params),
-    },
-  )
+      {
+        params: buildPaginationParams(params),
+      })
 
   return response.data
 }

@@ -2,16 +2,18 @@ import { apiClient } from '@/services/http/api-client'
 import { buildPaginationParams } from '@/services/http/pagination'
 
 import type {
+  LeadFilterParams,
   LeadRequestDTO,
   LeadResponseDTO,
   PageResponse,
-  PaginationParams,
 } from '@/types/api'
 
-export async function listLeads(params: PaginationParams = {}) {
-  const response = await apiClient.get<PageResponse<LeadResponseDTO>>('/leads', {
-    params: buildPaginationParams(params),
-  })
+export async function listLeads(params: LeadFilterParams = {}) {
+  const response = await apiClient.get<PageResponse<LeadResponseDTO>>(
+      '/leads',
+      {
+        params: buildPaginationParams(params),
+      })
 
   return response.data
 }

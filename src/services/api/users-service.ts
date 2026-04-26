@@ -3,15 +3,17 @@ import { buildPaginationParams } from '@/services/http/pagination'
 
 import type {
   PageResponse,
-  PaginationParams,
+  UserFilterParams,
   UserRequestDTO,
   UserResponseDTO,
 } from '@/types/api'
 
-export async function listUsers(params: PaginationParams = {}) {
-  const response = await apiClient.get<PageResponse<UserResponseDTO>>('/users', {
-    params: buildPaginationParams(params),
-  })
+export async function listUsers(params: UserFilterParams = {}) {
+  const response = await apiClient.get<PageResponse<UserResponseDTO>>(
+      '/users',
+      {
+        params: buildPaginationParams(params),
+      })
 
   return response.data
 }

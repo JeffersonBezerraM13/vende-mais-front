@@ -3,15 +3,17 @@ import { buildPaginationParams } from '@/services/http/pagination'
 
 import type {
   PageResponse,
-  PaginationParams,
+  TaskFilterParams,
   TaskRequestDTO,
   TaskResponseDTO,
 } from '@/types/api'
 
-export async function listTasks(params: PaginationParams = {}) {
-  const response = await apiClient.get<PageResponse<TaskResponseDTO>>('/tasks', {
-    params: buildPaginationParams(params),
-  })
+export async function listTasks(params: TaskFilterParams = {}) {
+  const response = await apiClient.get<PageResponse<TaskResponseDTO>>(
+      '/tasks',
+      {
+        params: buildPaginationParams(params),
+      })
 
   return response.data
 }

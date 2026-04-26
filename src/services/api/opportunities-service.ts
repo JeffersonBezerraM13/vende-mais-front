@@ -2,20 +2,19 @@ import { apiClient } from '@/services/http/api-client'
 import { buildPaginationParams } from '@/services/http/pagination'
 
 import type {
+  OpportunityFilterParams,
   OpportunityCloseDTO,
   OpportunityRequestDTO,
   OpportunityResponseDTO,
   PageResponse,
-  PaginationParams,
 } from '@/types/api'
 
-export async function listOpportunities(params: PaginationParams = {}) {
+export async function listOpportunities(params: OpportunityFilterParams = {}) {
   const response = await apiClient.get<PageResponse<OpportunityResponseDTO>>(
     '/opportunities',
-    {
+      {
       params: buildPaginationParams(params),
-    },
-  )
+      })
 
   return response.data
 }

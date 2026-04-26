@@ -1,8 +1,11 @@
 import type {
   EntryMethod,
   LeadSource,
+  OpportunityStatusFilter,
   PersonType,
   SolutionType,
+  TaskDeadlineFilter,
+  TaskLinkTypeFilter,
   TaskStatus,
   UserRole,
 } from '@/types/api'
@@ -22,6 +25,7 @@ export const SOLUTION_LABELS: Record<SolutionType, string> = {
   FISCAL_ADDRESS: 'Endereço Fiscal',
   COMMERCIAL_ADDRESS: 'Endereço Comercial',
   AUDITORIUM: 'Auditório',
+  NOT_SPECIFIED: 'Não especificado',
 }
 
 export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
@@ -30,6 +34,7 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   PHONE_CALL: 'Ligação',
   REFERRAL: 'Indicação',
   IN_PERSON: 'Presencial',
+  MARKETING_INTEGRATION: 'Integração de Marketing',
 }
 
 export const ENTRY_METHOD_LABELS: Record<EntryMethod, string> = {
@@ -46,6 +51,31 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Administrador',
   USER: 'Usuário',
+}
+
+export const OPPORTUNITY_STATUS_FILTER_LABELS: Record<
+  OpportunityStatusFilter,
+  string
+> = {
+  OPEN: 'Abertas',
+  WON: 'Ganhas',
+  LOST: 'Perdidas',
+}
+
+export const TASK_DEADLINE_FILTER_LABELS: Record<
+  TaskDeadlineFilter,
+  string
+> = {
+  OVERDUE: 'Atrasadas',
+  DUE_SOON: 'Vencendo em 3 dias',
+}
+
+export const TASK_LINK_TYPE_FILTER_LABELS: Record<
+  TaskLinkTypeFilter,
+  string
+> = {
+  LEAD: 'Vínculo: Leads',
+  OPPORTUNITY: 'Vínculo: Oportunidades',
 }
 
 export const PERSON_TYPE_OPTIONS = Object.entries(PERSON_TYPE_LABELS).map(
@@ -82,3 +112,29 @@ export const TASK_STATUS_OPTIONS = Object.entries(TASK_STATUS_LABELS).map(
     label,
   }),
 )
+
+export const ROLE_OPTIONS = Object.entries(ROLE_LABELS).map(([value, label]) => ({
+  value: value as UserRole,
+  label,
+}))
+
+export const OPPORTUNITY_STATUS_FILTER_OPTIONS = Object.entries(
+  OPPORTUNITY_STATUS_FILTER_LABELS,
+).map(([value, label]) => ({
+  value: value as OpportunityStatusFilter,
+  label,
+}))
+
+export const TASK_DEADLINE_FILTER_OPTIONS = Object.entries(
+  TASK_DEADLINE_FILTER_LABELS,
+).map(([value, label]) => ({
+  value: value as TaskDeadlineFilter,
+  label,
+}))
+
+export const TASK_LINK_TYPE_FILTER_OPTIONS = Object.entries(
+  TASK_LINK_TYPE_FILTER_LABELS,
+).map(([value, label]) => ({
+  value: value as TaskLinkTypeFilter,
+  label,
+}))

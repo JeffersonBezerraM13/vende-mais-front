@@ -6,12 +6,14 @@ export type SolutionType =
   | 'FISCAL_ADDRESS'
   | 'COMMERCIAL_ADDRESS'
   | 'AUDITORIUM'
+  | 'NOT_SPECIFIED'
 export type LeadSource =
   | 'SITE'
   | 'WHATSAPP'
   | 'PHONE_CALL'
   | 'REFERRAL'
   | 'IN_PERSON'
+  | 'MARKETING_INTEGRATION'
 export type EntryMethod = 'MANUAL' | 'IMPORTED' | 'INTEGRATION'
 export type TaskStatus = 'PENDING' | 'COMPLETED'
 
@@ -166,7 +168,6 @@ export interface OpportunityCloseDTO {
 }
 
 export interface TaskRequestDTO {
-  userId: number
   title: string
   description?: string | null
   taskStatus?: TaskStatus | null

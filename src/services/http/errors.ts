@@ -10,6 +10,8 @@ export interface ApiErrorInfo {
   status?: number
   fieldErrors: Record<string, string>
   isAuthError: boolean
+  isBusinessRuleViolation: boolean
+  isConflict: boolean
   isForbidden: boolean
   isNotFound: boolean
   isNetworkError: boolean
@@ -19,6 +21,34 @@ function isValidationError(
   payload: StandardErrorResponse | ValidationErrorResponse | undefined,
 ): payload is ValidationErrorResponse {
   return Array.isArray((payload as ValidationErrorResponse | undefined)?.erros)
+}
+
+function getDefaultErrorMessage(status?: number) {
+  if (status === 401) {
+    return 'Sua sessão expirou ou é inválida. Faça login novamente.'
+  }
+
+  if (status === 403) {
+    return 'Você não possui permissão para realizar esta ação.'
+  }
+
+  if (status === 404) {
+    return 'O recurso solicitado não foi encontrado.'
+  }
+
+  if (status === 409) {
+    return 'Não foi possível concluir a operação por conflito de dados.'
+  }
+
+  if (status === 422) {
+    return 'A operação viola uma regra de negócio.'
+  }
+
+  if (status === 400) {
+    return 'Os dados informados são inválidos.'
+  }
+
+  return 'Não foi possível concluir a operação.'
 }
 
 export function getApiErrorInfo(error: unknown): ApiErrorInfo {
@@ -34,13 +64,12 @@ export function getApiErrorInfo(error: unknown): ApiErrorInfo {
       : {}
 
     return {
-      message:
-        payload?.message ||
-        error.message ||
-        'Nao foi possivel concluir a operacao.',
+      message: payload?.message || getDefaultErrorMessage(error.response?.status),
       status: error.response?.status,
       fieldErrors,
       isAuthError: error.response?.status === 401,
+      isBusinessRuleViolation: error.response?.status === 422,
+      isConflict: error.response?.status === 409,
       isForbidden: error.response?.status === 403,
       isNotFound: error.response?.status === 404,
       isNetworkError: !error.response,
@@ -52,6 +81,8 @@ export function getApiErrorInfo(error: unknown): ApiErrorInfo {
       message: error.message,
       fieldErrors: {},
       isAuthError: false,
+      isBusinessRuleViolation: false,
+      isConflict: false,
       isForbidden: false,
       isNotFound: false,
       isNetworkError: false,
@@ -59,9 +90,11 @@ export function getApiErrorInfo(error: unknown): ApiErrorInfo {
   }
 
   return {
-    message: 'Erro inesperado ao comunicar com a API.',
+    message: 'Ocorreu um erro inesperado. Tente novamente.',
     fieldErrors: {},
     isAuthError: false,
+    isBusinessRuleViolation: false,
+    isConflict: false,
     isForbidden: false,
     isNotFound: false,
     isNetworkError: false,
