@@ -67,19 +67,27 @@ export function PipelineFormDialog({
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={pipeline ? 'Editar Funil' : 'Novo Funil'}
+      title={pipeline ? 'Editar funil' : 'Novo funil'}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title={pipeline ? 'Cancelar edição do funil' : 'Cancelar criação do funil'}
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            {pipeline ? 'Salvar Funil' : 'Criar Funil'}
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title={pipeline ? 'Salvar alterações do funil' : 'Criar funil'}
+          >
+            {pipeline ? 'Salvar funil' : 'Criar funil'}
           </Button>
         </>
       }
     >
-      <Field label="Título do Funil" error={errors.title?.message}>
+      <Field label="Título do funil" error={errors.title?.message}>
         <input className="input" {...register('title')} />
       </Field>
     </AppDialog>

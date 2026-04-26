@@ -83,14 +83,22 @@ export function StageFormDialog({
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={stage ? 'Editar Etapa' : 'Nova Etapa'}
+      title={stage ? 'Editar etapa' : 'Nova etapa'}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title={stage ? 'Cancelar edição da etapa' : 'Cancelar criação da etapa'}
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            {stage ? 'Salvar Etapa' : 'Criar Etapa'}
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title={stage ? 'Salvar alterações da etapa' : 'Criar etapa'}
+          >
+            {stage ? 'Salvar etapa' : 'Criar etapa'}
           </Button>
         </>
       }

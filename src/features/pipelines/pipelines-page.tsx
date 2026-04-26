@@ -10,20 +10,23 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Loader } from '@/components/ui/loader'
 import { PageHeader } from '@/components/ui/page-header'
+import { Pagination } from '@/components/ui/pagination'
 import { useAuthStore } from '@/features/auth/auth-store'
 import { PipelineFormDialog } from '@/features/pipelines/pipeline-form-dialog'
 import { StageFormDialog } from '@/features/pipelines/stage-form-dialog'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import {
   createPipeline,
   createStage,
   deletePipeline,
+  deleteStage,
   listPipelines,
   updatePipeline,
   updateStage,
-  deleteStage,
 } from '@/services/api/pipelines-service'
 import { getApiErrorInfo } from '@/services/http/errors'
 import { fetchAllPages } from '@/services/http/pagination'
+import { REFERENCE_PAGE_SIZE } from '@/utils/constants'
 import { formatNumber } from '@/utils/format'
 import { isAdmin } from '@/utils/permissions'
 
@@ -32,11 +35,15 @@ import type {
   StageFormValues,
 } from '@/features/pipelines/pipeline-schema'
 import type {
+  PipelineFilterParams,
   PipelineRequestDTO,
   PipelineResponseDTO,
   StageRequestDTO,
   StageResponseDTO,
 } from '@/types/api'
+
+const PIPELINES_SORT = 'title,asc'
+const PIPELINES_PAGE_SIZE = 6
 
 function toStagePayload(values: StageFormValues): StageRequestDTO {
   return {
@@ -47,10 +54,26 @@ function toStagePayload(values: StageFormValues): StageRequestDTO {
   }
 }
 
+function buildPipelineListParams({
+  page,
+  search,
+}: {
+  search: string
+  page: number
+}): PipelineFilterParams {
+  return {
+    search: search || undefined,
+    page,
+    size: PIPELINES_PAGE_SIZE,
+    sort: PIPELINES_SORT,
+  }
+}
+
 export default function PipelinesPage() {
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
   const canManage = isAdmin(user)
+  const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [isPipelineFormOpen, setIsPipelineFormOpen] = useState(false)
   const [isStageFormOpen, setIsStageFormOpen] = useState(false)
@@ -60,9 +83,25 @@ export default function PipelinesPage() {
   const [pipelineToDelete, setPipelineToDelete] = useState<PipelineResponseDTO | null>(null)
   const [stageToDelete, setStageToDelete] = useState<StageResponseDTO | null>(null)
 
+  const debouncedSearch = useDebouncedValue(search)
+  const pipelineListParams = buildPipelineListParams({
+    search: debouncedSearch,
+    page,
+  })
+
+  const pipelineOptionsQuery = useQuery({
+    queryKey: ['pipelines', 'reference', { sort: PIPELINES_SORT }],
+    queryFn: () =>
+      fetchAllPages(listPipelines, {
+        size: REFERENCE_PAGE_SIZE,
+        sort: PIPELINES_SORT,
+      }),
+  })
+
   const pipelinesQuery = useQuery({
-    queryKey: ['pipelines'],
-    queryFn: () => fetchAllPages(listPipelines, { size: 100, sort: 'title,asc' }),
+    queryKey: ['pipelines', 'list', pipelineListParams],
+    queryFn: () => listPipelines(pipelineListParams),
+    placeholderData: (previousData) => previousData,
   })
 
   const createPipelineMutation = useMutation({
@@ -107,29 +146,34 @@ export default function PipelinesPage() {
 
   const deleteStageMutation = useMutation({
     mutationFn: ({ pipelineId, stageId }: { pipelineId: number; stageId: number }) =>
-        deleteStage(pipelineId, stageId),
+      deleteStage(pipelineId, stageId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['pipelines'] })
       setStageToDelete(null)
     },
   })
 
-  if (pipelinesQuery.isLoading) {
+  if (pipelinesQuery.isLoading || pipelineOptionsQuery.isLoading) {
     return <Loader label="Carregando funis..." />
   }
 
-  if (pipelinesQuery.isError || !pipelinesQuery.data) {
+  if (
+    pipelinesQuery.isError ||
+    pipelineOptionsQuery.isError ||
+    !pipelinesQuery.data ||
+    !pipelineOptionsQuery.data
+  ) {
     return (
       <EmptyState
-        title="Falha ao carregar funis"
-        description="O backend deve responder aos endpoints de pipelines."
+        title="Não foi possível carregar os funis."
+        description="Verifique a disponibilidade do backend e tente novamente."
       />
     )
   }
 
-  const pipelines = pipelinesQuery.data.filter((pipeline) =>
-    pipeline.title.toLowerCase().includes(search.toLowerCase()),
-  )
+  const pipelinesPage = pipelinesQuery.data
+  const pipelines = pipelinesPage.content
+  const pipelineOptions = pipelineOptionsQuery.data
 
   const handleSavePipeline = async (values: PipelineFormValues) => {
     const payload: PipelineRequestDTO = { title: values.title }
@@ -162,14 +206,16 @@ export default function PipelinesPage() {
 
     try {
       await deletePipelineMutation.mutateAsync(pipelineToDelete.id)
-      toast.success('Funil excluido com sucesso.')
+      toast.success('Funil excluído com sucesso.')
     } catch (error) {
       toast.error(getApiErrorInfo(error).message)
     }
   }
 
   const handleDeleteStage = async () => {
-    if (!stageToDelete) return
+    if (!stageToDelete) {
+      return
+    }
 
     try {
       await deleteStageMutation.mutateAsync({
@@ -185,7 +231,7 @@ export default function PipelinesPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Funis Comerciais"
+        title="Configuração de Funis"
         actions={
           canManage ? (
             <Button
@@ -193,9 +239,10 @@ export default function PipelinesPage() {
                 setEditingPipeline(null)
                 setIsPipelineFormOpen(true)
               }}
+              title="Criar novo funil"
             >
               <Plus size={16} />
-              Novo Funil
+              Novo funil
             </Button>
           ) : null
         }
@@ -203,8 +250,8 @@ export default function PipelinesPage() {
 
       {!canManage ? (
         <Card className="notice-card">
-          <strong>Permissao limitada</strong>
-          <p>Somente usuarios ADMIN podem criar, editar ou excluir pipelines e stages.</p>
+          <strong>Permissão limitada</strong>
+          <p>Somente administradores podem criar, editar ou excluir funis e etapas.</p>
         </Card>
       ) : null}
 
@@ -214,14 +261,18 @@ export default function PipelinesPage() {
             <Search size={16} />
             <input
               className="input"
-              placeholder="Buscar funil por nome"
+              placeholder="Busque por nome do funil..."
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setPage(0)
+                setSearch(event.target.value)
+              }}
             />
           </div>
           <div className="toolbar-filters">
             <Badge tone="info">
-              {formatNumber(pipelines.length)} {pipelines.length === 1 ? 'funil' : 'funis'}
+              {formatNumber(pipelinesPage.totalElements)}{' '}
+              {pipelinesPage.totalElements === 1 ? 'funil' : 'funis'}
             </Badge>
           </div>
         </div>
@@ -242,12 +293,14 @@ export default function PipelinesPage() {
                           setEditingPipeline(pipeline)
                           setIsPipelineFormOpen(true)
                         }}
+                        title="Editar funil"
                       >
                         <Pencil size={16} />
                       </button>
                       <button
                         className="icon-button danger"
                         onClick={() => setPipelineToDelete(pipeline)}
+                        title="Excluir funil"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -260,37 +313,43 @@ export default function PipelinesPage() {
                     [...pipeline.stages]
                       .sort((left, right) => left.position - right.position)
                       .map((stage) => (
-                          <article key={stage.id} className="stage-row">
+                        <article key={stage.id} className="stage-row">
+                          <div>
                             <div>
-                              <div>
-                                <strong>{stage.position}. {stage.name}</strong>
-                              </div>
-                              <div><span>{stage.code}</span> </div>
+                              <strong>
+                                {stage.position}. {stage.name}
+                              </strong>
                             </div>
-                            {canManage ? (
-                                <div className="table-actions">
-                                  <button
-                                      className="icon-button"
-                                      onClick={() => {
-                                        setEditingStage(stage)
-                                        setStagePipelineId(stage.pipelineId)
-                                        setIsStageFormOpen(true)
-                                      }}
-                                  >
-                                    <Pencil size={16} />
-                                  </button>
-                                  <button
-                                      className="icon-button danger"
-                                      onClick={() => setStageToDelete(stage)}
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                            ) : null}
-                          </article>
+                            <div>
+                              <span>{stage.code}</span>
+                            </div>
+                          </div>
+                          {canManage ? (
+                            <div className="table-actions">
+                              <button
+                                className="icon-button"
+                                onClick={() => {
+                                  setEditingStage(stage)
+                                  setStagePipelineId(stage.pipelineId)
+                                  setIsStageFormOpen(true)
+                                }}
+                                title="Editar etapa"
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className="icon-button danger"
+                                onClick={() => setStageToDelete(stage)}
+                                title="Excluir etapa"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          ) : null}
+                        </article>
                       ))
                   ) : (
-                    <div className="kanban-empty">Nenhuma stage cadastrada.</div>
+                    <div className="kanban-empty">Nenhuma etapa cadastrada.</div>
                   )}
                 </div>
 
@@ -303,9 +362,10 @@ export default function PipelinesPage() {
                       setStagePipelineId(pipeline.id)
                       setIsStageFormOpen(true)
                     }}
+                    title={`Adicionar etapa ao funil ${pipeline.title}`}
                   >
                     <Workflow size={16} />
-                    Adicionar stage
+                    Adicionar etapa
                   </Button>
                 ) : null}
               </article>
@@ -313,11 +373,18 @@ export default function PipelinesPage() {
           ) : (
             <EmptyState
               icon={<Workflow size={18} />}
-              title="Nenhum pipeline encontrado"
-              description="Cadastre o primeiro pipeline para estruturar o funil."
+              title="Nenhum funil cadastrado."
+              description="Cadastre um novo funil para continuar."
             />
           )}
         </div>
+
+        <Pagination
+          page={pipelinesPage.number}
+          totalPages={pipelinesPage.totalPages}
+          totalItems={pipelinesPage.totalElements}
+          onPageChange={setPage}
+        />
       </Card>
 
       <PipelineFormDialog
@@ -337,7 +404,7 @@ export default function PipelinesPage() {
         open={isStageFormOpen}
         stage={editingStage}
         initialPipelineId={stagePipelineId}
-        pipelines={pipelinesQuery.data}
+        pipelines={pipelineOptions}
         loading={createStageMutation.isPending || updateStageMutation.isPending}
         onOpenChange={(open) => {
           setIsStageFormOpen(open)
@@ -351,11 +418,11 @@ export default function PipelinesPage() {
 
       <ConfirmDialog
         open={Boolean(pipelineToDelete)}
-        title="Excluir pipeline"
+        title="Excluir funil"
         description={
           pipelineToDelete
-            ? `Deseja remover o pipeline ${pipelineToDelete.title}?`
-            : 'Deseja remover este pipeline?'
+            ? `Deseja remover o funil ${pipelineToDelete.title}?`
+            : 'Deseja remover este funil?'
         }
         loading={deletePipelineMutation.isPending}
         onOpenChange={(open) => {
@@ -367,20 +434,20 @@ export default function PipelinesPage() {
       />
 
       <ConfirmDialog
-          open={Boolean(stageToDelete)}
-          title="Excluir etapa"
-          description={
-            stageToDelete
-                ? `Deseja remover a etapa "${stageToDelete.name}"?`
-                : 'Deseja remover esta etapa?'
+        open={Boolean(stageToDelete)}
+        title="Excluir etapa"
+        description={
+          stageToDelete
+            ? `Deseja remover a etapa "${stageToDelete.name}"?`
+            : 'Deseja remover esta etapa?'
+        }
+        loading={deleteStageMutation.isPending}
+        onOpenChange={(open) => {
+          if (!open) {
+            setStageToDelete(null)
           }
-          loading={deleteStageMutation.isPending}
-          onOpenChange={(open) => {
-            if (!open) {
-              setStageToDelete(null)
-            }
-          }}
-          onConfirm={handleDeleteStage}
+        }}
+        onConfirm={handleDeleteStage}
       />
     </div>
   )
