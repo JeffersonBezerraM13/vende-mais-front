@@ -32,7 +32,7 @@ import { listOpportunities } from '@/services/api/opportunities-service'
 import { createTask, deleteTask, listTasks, updateTask } from '@/services/api/tasks-service'
 import { listUsers } from '@/services/api/users-service'
 import { getApiErrorInfo } from '@/services/http/errors'
-import { fetchAllPages } from '@/services/http/pagination'
+import { createLocalPage, fetchAllPages } from '@/services/http/pagination'
 import {
   DEFAULT_PAGE_SIZE,
   REFERENCE_PAGE_SIZE,
@@ -98,7 +98,6 @@ function toCompletedTaskPayload(task: TaskResponseDTO): TaskRequestDTO {
 function buildTaskListParams({
   deadline,
   linkType,
-  page,
   search,
   status,
 }: {
@@ -106,39 +105,18 @@ function buildTaskListParams({
   status: TaskStatus | ''
   deadline: TaskDeadlineFilter | ''
   linkType: TaskLinkTypeFilter | ''
-  page: number
 }): TaskFilterParams {
   return {
     search: search || undefined,
     status: status || undefined,
     deadline: deadline || undefined,
     linkType: linkType || undefined,
-    page,
-    size: DEFAULT_PAGE_SIZE,
     sort: TASKS_SORT,
   }
 }
 
-function buildTaskCountParams({
-  deadline,
-  linkType,
-  search,
-  status,
-}: {
-  search: string
-  status?: TaskStatus
-  deadline?: TaskDeadlineFilter
-  linkType: TaskLinkTypeFilter | ''
-}): TaskFilterParams {
-  return {
-    search: search || undefined,
-    status,
-    deadline,
-    linkType: linkType || undefined,
-    page: 0,
-    size: 1,
-    sort: TASKS_SORT,
-  }
+function isTaskOwnedByUser(task: TaskResponseDTO, userId: number) {
+  return task.userId === userId || task.user?.id === userId
 }
 
 function getTaskRelationMeta(
@@ -253,13 +231,21 @@ export default function TasksPage() {
     status: statusFilter,
     deadline: deadlineFilter,
     linkType: relationFilter,
-    page,
+  })
+  const taskStatsParams = buildTaskListParams({
+    search: debouncedSearch,
+    status: '',
+    deadline: '',
+    linkType: relationFilter,
   })
 
   const tasksQuery = useQuery({
     queryKey: ['tasks', 'list', taskListParams],
-    queryFn: () => listTasks(taskListParams),
-    placeholderData: (previousData) => previousData,
+    queryFn: () =>
+      fetchAllPages(listTasks, {
+        ...taskListParams,
+        size: DEFAULT_PAGE_SIZE,
+      }),
   })
 
   const leadsQuery = useQuery({
@@ -284,70 +270,13 @@ export default function TasksPage() {
       ),
   })
 
-  const pendingCountQuery = useQuery({
-    queryKey: [
-      'tasks',
-      'count',
-      buildTaskCountParams({
-        search: debouncedSearch,
-        status: 'PENDING',
-        linkType: relationFilter,
+  const taskStatsQuery = useQuery({
+    queryKey: ['tasks', 'stats', taskStatsParams],
+    queryFn: () =>
+      fetchAllPages(listTasks, {
+        ...taskStatsParams,
+        size: DEFAULT_PAGE_SIZE,
       }),
-    ],
-    queryFn: async () =>
-      (
-        await listTasks(
-          buildTaskCountParams({
-            search: debouncedSearch,
-            status: 'PENDING',
-            linkType: relationFilter,
-          }),
-        )
-      ).totalElements,
-  })
-
-  const completedCountQuery = useQuery({
-    queryKey: [
-      'tasks',
-      'count',
-      buildTaskCountParams({
-        search: debouncedSearch,
-        status: 'COMPLETED',
-        linkType: relationFilter,
-      }),
-    ],
-    queryFn: async () =>
-      (
-        await listTasks(
-          buildTaskCountParams({
-            search: debouncedSearch,
-            status: 'COMPLETED',
-            linkType: relationFilter,
-          }),
-        )
-      ).totalElements,
-  })
-
-  const overdueCountQuery = useQuery({
-    queryKey: [
-      'tasks',
-      'count',
-      buildTaskCountParams({
-        search: debouncedSearch,
-        deadline: 'OVERDUE',
-        linkType: relationFilter,
-      }),
-    ],
-    queryFn: async () =>
-      (
-        await listTasks(
-          buildTaskCountParams({
-            search: debouncedSearch,
-            deadline: 'OVERDUE',
-            linkType: relationFilter,
-          }),
-        )
-      ).totalElements,
   })
 
   const createMutation = useMutation({
@@ -375,6 +304,7 @@ export default function TasksPage() {
 
   if (
     tasksQuery.isLoading ||
+    taskStatsQuery.isLoading ||
     leadsQuery.isLoading ||
     opportunitiesQuery.isLoading ||
     usersQuery.isLoading
@@ -384,9 +314,11 @@ export default function TasksPage() {
 
   if (
     tasksQuery.isError ||
+    taskStatsQuery.isError ||
     leadsQuery.isError ||
     opportunitiesQuery.isError ||
     !tasksQuery.data ||
+    !taskStatsQuery.data ||
     !leadsQuery.data ||
     !opportunitiesQuery.data ||
     !usersQuery.data
@@ -408,20 +340,16 @@ export default function TasksPage() {
     )
   }
 
-  const tasksPage = tasksQuery.data
+  const filteredTasks = tasksQuery.data.filter((task) => isTaskOwnedByUser(task, currentUser.id))
+  const tasksPage = createLocalPage(filteredTasks, page)
   const tasks = tasksPage.content
-  const pendingCount =
-    pendingCountQuery.data ??
-    tasks.filter((task) => task.taskStatus !== 'COMPLETED').length
-  const completedCount =
-    completedCountQuery.data ??
-    tasks.filter((task) => task.taskStatus === 'COMPLETED').length
-  const overdueCount =
-    overdueCountQuery.data ??
-    tasks.filter((task) => {
-      const difference = differenceInCalendarDays(parseISO(task.dueDate), startOfDay(new Date()))
-      return task.taskStatus !== 'COMPLETED' && difference < 0
-    }).length
+  const taskStats = taskStatsQuery.data.filter((task) => isTaskOwnedByUser(task, currentUser.id))
+  const pendingCount = taskStats.filter((task) => task.taskStatus !== 'COMPLETED').length
+  const completedCount = taskStats.filter((task) => task.taskStatus === 'COMPLETED').length
+  const overdueCount = taskStats.filter((task) => {
+    const difference = differenceInCalendarDays(parseISO(task.dueDate), startOfDay(new Date()))
+    return task.taskStatus !== 'COMPLETED' && difference < 0
+  }).length
 
   const handleSaveTask = async (values: TaskFormValues) => {
     const payload = toTaskPayload(values)
@@ -669,7 +597,7 @@ export default function TasksPage() {
         />
 
         <Pagination
-          page={tasksPage.number}
+          page={tasksPage.page}
           totalPages={tasksPage.totalPages}
           totalItems={tasksPage.totalElements}
           onPageChange={setPage}
