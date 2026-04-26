@@ -8,7 +8,7 @@ export async function login(credentials: CredentialsDTO) {
   const token = response.headers.authorization as string | undefined
 
   if (!token) {
-    throw new Error('O backend não retornou o header Authorization no login.')
+    throw new Error('O backend não retornou o cabeçalho Authorization no login.')
   }
 
   setAuthToken(token)

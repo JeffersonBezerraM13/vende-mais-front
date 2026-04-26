@@ -1,7 +1,7 @@
 import { format, formatDistanceToNowStrict, isValid, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-export function formatDate(date?: string | null, emptyLabel = 'Sem Data') {
+export function formatDate(date?: string | null, emptyLabel = 'Sem data') {
   if (!date) {
     return emptyLabel
   }
@@ -23,7 +23,7 @@ export function formatDateTime(date?: string | null, emptyLabel = 'Sem data') {
     : date
 }
 
-export function formatRelativeDate(date?: string | null, emptyLabel = 'Sem Data') {
+export function formatRelativeDate(date?: string | null, emptyLabel = 'Sem data') {
   if (!date) {
     return emptyLabel
   }
@@ -37,7 +37,7 @@ export function formatRelativeDate(date?: string | null, emptyLabel = 'Sem Data'
 
 export function formatCurrency(value?: number | null) {
   if (value == null || Number.isNaN(value)) {
-    return 'Não Informado'
+    return 'Não informado'
   }
 
   return new Intl.NumberFormat('pt-BR', {
@@ -57,7 +57,7 @@ export function formatNumber(value?: number | null) {
 
 export function formatEnumLabel(value?: string | null) {
   if (!value) {
-    return 'Não Informado'
+    return 'Não informado'
   }
 
   return value
@@ -83,7 +83,7 @@ export function getInitials(value?: string | null) {
 
 export function truncateText(value?: string | null, max = 80) {
   if (!value) {
-    return 'Sem observacões'
+    return 'Sem observações'
   }
 
   if (value.length <= max) {

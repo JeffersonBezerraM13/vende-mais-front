@@ -7,12 +7,12 @@ import { formatDate } from '@/utils/format'
 import { isAdmin } from '@/utils/permissions'
 
 const titles: Record<string, string> = {
-  '/dashboard': 'Painel Comercial',
-  '/leads': 'Gestao de Leads',
-  '/opportunities': 'Funil de Oportunidades',
-  '/pipelines': 'Configuracao de Funis',
-  '/tasks': 'Agenda Comercial',
-  '/users': 'Funcionarios e Permissoes',
+  '/dashboard': 'Visão Geral',
+  '/leads': 'Relacionamento Comercial',
+  '/opportunities': 'Negociações',
+  '/pipelines': 'Estrutura Comercial',
+  '/tasks': 'Rotina Comercial',
+  '/users': 'Administração',
 }
 
 interface TopbarProps {
@@ -32,7 +32,11 @@ export function Topbar({
   return (
     <header className="app-topbar">
       <div className="topbar-left">
-        <button className="icon-button desktop-only" onClick={onSidebarToggle}>
+        <button
+          className="icon-button desktop-only"
+          onClick={onSidebarToggle}
+          title={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+        >
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
         </button>
         <div>
@@ -47,12 +51,12 @@ export function Topbar({
         </div>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <button className="profile-chip">
+            <button className="profile-chip" title="Abrir menu do usuário">
               <span className="profile-avatar">
                 {user?.name?.slice(0, 1).toUpperCase() ?? 'V'}
               </span>
               <span className="profile-meta">
-                <strong>{user?.name ?? 'Usuario'}</strong>
+                <strong>{user?.name ?? 'Usuário'}</strong>
                 <small>{isAdmin(user) ? 'Administrador' : 'Operador'}</small>
               </span>
             </button>
@@ -62,12 +66,12 @@ export function Topbar({
             <DropdownMenu.Content className="dropdown-menu" sideOffset={8} align="end">
               <div className="dropdown-menu-header">
                 <strong>{user?.email}</strong>
-                <span>{(user?.roles ?? []).join(', ') || 'Sem roles'}</span>
+                <span>{(user?.roles ?? []).join(', ') || 'Sem permissões'}</span>
               </div>
               <DropdownMenu.Separator className="dropdown-menu-separator" />
               <DropdownMenu.Item className="dropdown-menu-item" onSelect={onLogout}>
                 <LogOut size={16} />
-                Encerrar sessao
+                Encerrar sessão
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>

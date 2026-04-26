@@ -52,8 +52,8 @@ export default function LoginPage() {
         <Badge tone="info">CRM Comercial</Badge>
         <h1>VendeMais CRM</h1>
         <p>
-          Painel Único para Leads, Funis, Oportunidades, Tarefas e Governança
-          Comercial em Tempo Real.
+          Painel único para Leads, Funis, Oportunidades, Tarefas e Governança
+          Comercial em tempo real.
         </p>
 
         <div className="auth-feature-list">
@@ -61,21 +61,29 @@ export default function LoginPage() {
             <BarChart3 size={18} />
             <div>
               <strong>Visão 360º de Vendas</strong>
-              <span>Acompanhe funis, atividades da equipe e o avanço das negociações em tempo real.</span>
+              <span>
+                Acompanhe funis, atividades da equipe e o avanço das negociações em tempo real.
+              </span>
             </div>
           </article>
           <article className="auth-feature-card">
             <ShieldCheck size={18} />
             <div>
               <strong>Segurança Institucional</strong>
-              <span>Controle de acesso rigoroso e proteção contínua para os dados estratégicos da sua empresa.</span>
+              <span>
+                Controle de acesso rigoroso e proteção contínua para os dados estratégicos da sua
+                empresa.
+              </span>
             </div>
           </article>
           <article className="auth-feature-card">
             <LockKeyhole size={18} />
             <div>
               <strong>Ambiente Exclusivo</strong>
-              <span>Sistema isolado e otimizado para garantir máxima velocidade e privacidade total das suas informações.</span>
+              <span>
+                Sistema isolado e otimizado para garantir máxima velocidade e privacidade total
+                das suas informações.
+              </span>
             </div>
           </article>
         </div>
@@ -106,13 +114,18 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 className="input"
-                placeholder="informe sua senha"
+                placeholder="Informe sua senha"
                 autoComplete="current-password"
                 {...register('password')}
               />
             </Field>
 
-            <Button type="submit" className="btn-block" loading={isLoggingIn}>
+            <Button
+              type="submit"
+              className="btn-block"
+              loading={isLoggingIn}
+              title="Entrar no sistema"
+            >
               Entrar
             </Button>
           </form>

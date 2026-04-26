@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import {
   BriefcaseBusiness,
-  GitBranch,
+  Funnel,
   LayoutDashboard,
   ListTodo,
   UserCog,
@@ -10,12 +10,12 @@ import {
 import { NavLink } from 'react-router-dom'
 
 const navigation = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/dashboard', label: 'Painel', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/opportunities', label: 'Oportunidades', icon: BriefcaseBusiness },
-  { to: '/pipelines', label: 'Funis', icon: GitBranch },
+  { to: '/pipelines', label: 'Funis', icon: Funnel },
   { to: '/tasks', label: 'Tarefas', icon: ListTodo },
-  { to: '/users', label: 'Funcionarios', icon: UserCog },
+  { to: '/users', label: 'Usuários', icon: UserCog },
 ]
 
 interface SidebarProps {

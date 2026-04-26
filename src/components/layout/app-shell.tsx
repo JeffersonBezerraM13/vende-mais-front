@@ -21,6 +21,7 @@ export function AppShell() {
         <button
           className="sidebar-backdrop"
           aria-label="Fechar Menu Lateral"
+          title="Fechar menu lateral"
           onClick={() => setMobileOpen(false)}
         />
       ) : null}

@@ -27,6 +27,7 @@ export function SegmentedControl<T extends string>({
             option.value === value && 'is-active',
           )}
           onClick={() => onChange(option.value)}
+          title={option.label}
         >
           {option.label}
         </button>
