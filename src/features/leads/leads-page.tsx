@@ -13,10 +13,11 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Pagination } from '@/components/ui/pagination'
 import { LeadDetailsDialog } from '@/features/leads/lead-details-dialog'
 import { LeadFormDialog } from '@/features/leads/lead-form-dialog'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { createLead, deleteLead, listLeads, updateLead } from '@/services/api/leads-service'
 import { getApiErrorInfo } from '@/services/http/errors'
-import { createLocalPage, fetchAllPages } from '@/services/http/pagination'
 import {
+  DEFAULT_PAGE_SIZE,
   LEAD_SOURCE_LABELS,
   LEAD_SOURCE_OPTIONS,
   PERSON_TYPE_LABELS,
@@ -27,11 +28,14 @@ import { formatDate, formatNumber, maskPhone } from '@/utils/format'
 import type { LeadFormValues } from '@/features/leads/lead-schema'
 import type {
   EntryMethod,
+  LeadFilterParams,
   LeadRequestDTO,
   LeadResponseDTO,
   LeadSource,
   PersonType,
 } from '@/types/api'
+
+const LEADS_SORT = 'createdAt,desc'
 
 function toLeadPayload(values: LeadFormValues): LeadRequestDTO {
   return {
@@ -47,6 +51,46 @@ function toLeadPayload(values: LeadFormValues): LeadRequestDTO {
   }
 }
 
+function buildLeadListParams({
+  leadSource,
+  page,
+  personType,
+  search,
+}: {
+  search: string
+  personType: PersonType | ''
+  leadSource: LeadSource | ''
+  page: number
+}): LeadFilterParams {
+  return {
+    search: search || undefined,
+    personType: personType || undefined,
+    leadSource: leadSource || undefined,
+    page,
+    size: DEFAULT_PAGE_SIZE,
+    sort: LEADS_SORT,
+  }
+}
+
+function buildLeadCountParams({
+  leadSource,
+  personType,
+  search,
+}: {
+  search: string
+  personType?: PersonType
+  leadSource: LeadSource | ''
+}): LeadFilterParams {
+  return {
+    search: search || undefined,
+    personType,
+    leadSource: leadSource || undefined,
+    page: 0,
+    size: 1,
+    sort: LEADS_SORT,
+  }
+}
+
 export default function LeadsPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(0)
@@ -58,9 +102,50 @@ export default function LeadsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [leadToDelete, setLeadToDelete] = useState<LeadResponseDTO | null>(null)
 
+  const debouncedSearch = useDebouncedValue(search)
+  const leadListParams = buildLeadListParams({
+    search: debouncedSearch,
+    personType: personTypeFilter,
+    leadSource: sourceFilter,
+    page,
+  })
+  const leadStatsParams = {
+    search: debouncedSearch,
+    leadSource: sourceFilter,
+  }
+
   const leadsQuery = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => fetchAllPages(listLeads, { size: 100, sort: 'createdAt,desc' }),
+    queryKey: ['leads', 'list', leadListParams],
+    queryFn: () => listLeads(leadListParams),
+    placeholderData: (previousData) => previousData,
+  })
+
+  const companiesCountQuery = useQuery({
+    queryKey: [
+      'leads',
+      'count',
+      buildLeadCountParams({ ...leadStatsParams, personType: 'COMPANY' }),
+    ],
+    queryFn: async () =>
+      (
+        await listLeads(
+          buildLeadCountParams({ ...leadStatsParams, personType: 'COMPANY' }),
+        )
+      ).totalElements,
+  })
+
+  const individualsCountQuery = useQuery({
+    queryKey: [
+      'leads',
+      'count',
+      buildLeadCountParams({ ...leadStatsParams, personType: 'INDIVIDUAL' }),
+    ],
+    queryFn: async () =>
+      (
+        await listLeads(
+          buildLeadCountParams({ ...leadStatsParams, personType: 'INDIVIDUAL' }),
+        )
+      ).totalElements,
   })
 
   const createMutation = useMutation({
@@ -74,8 +159,7 @@ export default function LeadsPage() {
     mutationFn: ({ id, payload }: { id: number; payload: LeadRequestDTO }) =>
       updateLead(id, payload),
     onSuccess: async () => {
-      await
-          queryClient.invalidateQueries({ queryKey: ['leads'] })
+      await queryClient.invalidateQueries({ queryKey: ['leads'] })
     },
   })
 
@@ -94,29 +178,20 @@ export default function LeadsPage() {
   if (leadsQuery.isError || !leadsQuery.data) {
     return (
       <EmptyState
-        title="Falha ao carregar leads"
-        description="O módulo de leads depende do backend autenticado."
+        title="Não foi possível carregar os leads."
+        description="Verifique a disponibilidade do backend e tente novamente."
       />
     )
   }
 
-  const leads = leadsQuery.data
-  const filteredLeads = leads.filter((lead) => {
-    const matchesSearch =
-      !search ||
-      [lead.name, lead.email, lead.phone, lead.companyName]
-        .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(search.toLowerCase()))
-    const matchesPersonType =
-      !personTypeFilter || lead.personType === personTypeFilter
-    const matchesSource = !sourceFilter || lead.leadSource === sourceFilter
-
-    return matchesSearch && matchesPersonType && matchesSource
-  })
-
-  const localPage = createLocalPage(filteredLeads, page)
-  const companiesCount = leads.filter((lead) => lead.personType === 'COMPANY').length
-  const individualsCount = leads.filter((lead) => lead.personType === 'INDIVIDUAL').length
+  const leadsPage = leadsQuery.data
+  const leads = leadsPage.content
+  const companiesCount =
+    companiesCountQuery.data ??
+    leads.filter((lead) => lead.personType === 'COMPANY').length
+  const individualsCount =
+    individualsCountQuery.data ??
+    leads.filter((lead) => lead.personType === 'INDIVIDUAL').length
 
   const handleSaveLead = async (values: LeadFormValues) => {
     const payload = toLeadPayload(values)
@@ -146,13 +221,14 @@ export default function LeadsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Leads"
+        title="Gestão de Leads"
         actions={
           <Button
             onClick={() => {
               setEditingLead(null)
               setIsFormOpen(true)
             }}
+            title="Criar novo lead"
           >
             <Plus size={16} />
             Novo lead
@@ -163,7 +239,7 @@ export default function LeadsPage() {
       <section className="stats-grid stats-grid-compact">
         <Card className="mini-stat-card">
           <span>Total</span>
-          <strong>{formatNumber(leads.length)}</strong>
+          <strong>{formatNumber(leadsPage.totalElements)}</strong>
         </Card>
         <Card className="mini-stat-card">
           <span>Pessoas Jurídicas</span>
@@ -181,7 +257,7 @@ export default function LeadsPage() {
             <Search size={16} />
             <input
               className="input"
-              placeholder="Buscar por nome, email, telefone ou nome da empresa"
+              placeholder="Busque por nome, e-mail, telefone ou empresa..."
               value={search}
               onChange={(event) => {
                 setPage(0)
@@ -225,13 +301,13 @@ export default function LeadsPage() {
         </div>
 
         <DataTable
-          data={localPage.content}
+          data={leads}
           rowKey={(lead) => lead.id}
           emptyState={
             <EmptyState
               icon={<UsersRound size={18} />}
-              title="Nenhum lead encontrado"
-              description="Ajuste os filtros ou cadastre um novo lead para alimentar o funil."
+              title="Nenhum lead encontrado."
+              description="Ajuste os filtros ou cadastre um novo registro para continuar."
             />
           }
           columns={[
@@ -241,10 +317,9 @@ export default function LeadsPage() {
               cell: (lead) => (
                 <div className="cell-stack">
                   <strong>{lead.name}</strong>
-                    {/* O React só vai ler e renderizar o <span> abaixo se a condição for Verdadeira */}
-                    {lead.personType !== 'INDIVIDUAL' && lead.companyName && (
-                        <span className="text-gray-500 text-sm">{lead.companyName}</span>
-                    )}
+                  {lead.personType !== 'INDIVIDUAL' && lead.companyName ? (
+                    <span className="text-gray-500 text-sm">{lead.companyName}</span>
+                  ) : null}
                 </div>
               ),
             },
@@ -261,16 +336,14 @@ export default function LeadsPage() {
             {
               key: 'classification',
               header: 'Classificação',
-                cell: (lead) => (
-                    <div className="badge-list">
-                        <Badge
-                            tone={lead.personType === 'COMPANY' ? 'company' : 'info'}
-                        >
-                            {lead.personType ? PERSON_TYPE_LABELS[lead.personType] : 'Não Informado'}
-                        </Badge>
-                        <Badge tone="neutral">{LEAD_SOURCE_LABELS[lead.leadSource]}</Badge>
-                    </div>
-                ),
+              cell: (lead) => (
+                <div className="badge-list">
+                  <Badge tone={lead.personType === 'COMPANY' ? 'company' : 'info'}>
+                    {lead.personType ? PERSON_TYPE_LABELS[lead.personType] : 'Não informado'}
+                  </Badge>
+                  <Badge tone="neutral">{LEAD_SOURCE_LABELS[lead.leadSource]}</Badge>
+                </div>
+              ),
             },
             {
               key: 'createdAt',
@@ -283,7 +356,11 @@ export default function LeadsPage() {
               className: 'cell-actions',
               cell: (lead) => (
                 <div className="table-actions">
-                  <button className="icon-button" onClick={() => setSelectedLead(lead)} title="Detalhes">
+                  <button
+                    className="icon-button"
+                    onClick={() => setSelectedLead(lead)}
+                    title="Ver detalhes do lead"
+                  >
                     <Eye size={16} />
                   </button>
                   <button
@@ -292,11 +369,15 @@ export default function LeadsPage() {
                       setEditingLead(lead)
                       setIsFormOpen(true)
                     }}
-                    title="Editar"
+                    title="Editar lead"
                   >
                     <Pencil size={16} />
                   </button>
-                  <button className="icon-button danger" onClick={() => setLeadToDelete(lead)} title="Excluir">
+                  <button
+                    className="icon-button danger"
+                    onClick={() => setLeadToDelete(lead)}
+                    title="Excluir lead"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -306,9 +387,9 @@ export default function LeadsPage() {
         />
 
         <Pagination
-          page={localPage.page}
-          totalPages={localPage.totalPages}
-          totalItems={localPage.totalElements}
+          page={leadsPage.number}
+          totalPages={leadsPage.totalPages}
+          totalItems={leadsPage.totalElements}
           onPageChange={setPage}
         />
       </Card>

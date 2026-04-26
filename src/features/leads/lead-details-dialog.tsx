@@ -60,7 +60,7 @@ export function LeadDetailsDialog({
           <h3>Classificação</h3>
           <div className="detail-badges">
             <Badge tone="info">
-              {lead.personType ? PERSON_TYPE_LABELS[lead.personType] : 'Tipo não Informado'}
+              {lead.personType ? PERSON_TYPE_LABELS[lead.personType] : 'Tipo não informado'}
             </Badge>
             <Badge tone="neutral">
               {LEAD_SOURCE_LABELS[lead.leadSource] || lead.leadSource}

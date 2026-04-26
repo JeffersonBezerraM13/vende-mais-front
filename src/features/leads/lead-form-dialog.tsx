@@ -111,15 +111,23 @@ export function LeadFormDialog({
     <AppDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={lead ? 'Editar Lead' : 'Novo Lead'}
+      title={lead ? 'Editar lead' : 'Novo lead'}
       size="lg"
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            title={lead ? 'Cancelar edição do lead' : 'Cancelar criação do lead'}
+          >
             Cancelar
           </Button>
-          <Button loading={loading} onClick={() => void submit()}>
-            {lead ? 'Salvar Alterações' : 'Cadastrar Lead'}
+          <Button
+            loading={loading}
+            onClick={() => void submit()}
+            title={lead ? 'Salvar alterações do lead' : 'Criar lead'}
+          >
+            {lead ? 'Salvar alterações' : 'Criar lead'}
           </Button>
         </>
       }
@@ -140,7 +148,7 @@ export function LeadFormDialog({
           error={errors.personType?.message}
         >
           <select id="lead-person-type" className="input" {...register('personType')}>
-            <option value="">Não Informado</option>
+            <option value="">Não informado</option>
             {PERSON_TYPE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -165,12 +173,12 @@ export function LeadFormDialog({
               {...register('companyName')} />
         </Field>
         <Field
-          label="Solucão de Interesse"
+          label="Solução de Interesse"
           htmlFor="lead-solution"
           error={errors.interestSoluction?.message}
         >
           <select id="lead-solution" className="input" {...register('interestSoluction')}>
-            <option value="">Não Informado</option>
+            <option value="">Não informado</option>
             {SOLUTION_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -184,7 +192,7 @@ export function LeadFormDialog({
           error={errors.leadSource?.message}
         >
           <select id="lead-source" className="input" {...register('leadSource')}>
-            <option value="">Não Informado</option>
+            <option value="">Não informado</option>
             {LEAD_SOURCE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -193,12 +201,12 @@ export function LeadFormDialog({
           </select>
         </Field>
         <Field
-          label="Metodo de Entrada"
+          label="Método de Entrada"
           htmlFor="lead-entry-method"
           error={errors.entryMethod?.message}
         >
           <select id="lead-entry-method" className="input" {...register('entryMethod')}>
-            <option value="">Não Informado</option>
+            <option value="">Não informado</option>
             {ENTRY_METHOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
