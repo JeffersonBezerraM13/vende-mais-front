@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import {
-  BriefcaseBusiness,
+  Handshake,
   Funnel,
   LayoutDashboard,
   ListTodo,
@@ -12,7 +12,7 @@ import { NavLink } from 'react-router-dom'
 const navigation = [
   { to: '/dashboard', label: 'Painel', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
-  { to: '/opportunities', label: 'Oportunidades', icon: BriefcaseBusiness },
+  { to: '/opportunities', label: 'Oportunidades', icon: Handshake },
   { to: '/pipelines', label: 'Funis', icon: Funnel },
   { to: '/tasks', label: 'Tarefas', icon: ListTodo },
   { to: '/users', label: 'Usuários', icon: UserCog },
