@@ -10,6 +10,7 @@ import { GuestOnlyRoute, ProtectedRoute } from '@/features/auth/protected-route'
 const LoginPage = lazy(() => import('@/features/auth/login-page'))
 const DashboardPage = lazy(() => import('@/features/dashboard/dashboard-page'))
 const LeadsPage = lazy(() => import('@/features/leads/leads-page'))
+const OpportunitiesPage = lazy(() => import('@/features/opportunities/opportunities-page'))
 
 function withSuspense(element: ReactNode) {
   return (
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <Navigate to="/dashboard" replace /> },
           { path: '/dashboard', element: withSuspense(<DashboardPage />) },
           { path: '/leads', element: withSuspense(<LeadsPage />) },
+          { path: '/opportunities', element: withSuspense(<OpportunitiesPage />) },
         ],
       },
     ],

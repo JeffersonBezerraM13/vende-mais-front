@@ -1,10 +1,11 @@
 import clsx from 'clsx'
-import { LayoutDashboard, Users } from 'lucide-react'
+import { BriefcaseBusiness, LayoutDashboard, Users } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const navigation = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
+  { to: '/opportunities', label: 'Oportunidades', icon: BriefcaseBusiness },
 ]
 
 interface SidebarProps {
