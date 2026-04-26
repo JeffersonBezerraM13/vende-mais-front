@@ -1,5 +1,12 @@
 import clsx from 'clsx'
-import { BriefcaseBusiness, GitBranch, LayoutDashboard, ListTodo, Users } from 'lucide-react'
+import {
+  BriefcaseBusiness,
+  GitBranch,
+  LayoutDashboard,
+  ListTodo,
+  UserCog,
+  Users,
+} from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 const navigation = [
@@ -8,6 +15,7 @@ const navigation = [
   { to: '/opportunities', label: 'Oportunidades', icon: BriefcaseBusiness },
   { to: '/pipelines', label: 'Funis', icon: GitBranch },
   { to: '/tasks', label: 'Tarefas', icon: ListTodo },
+  { to: '/users', label: 'Funcionarios', icon: UserCog },
 ]
 
 interface SidebarProps {

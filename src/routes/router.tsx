@@ -13,6 +13,7 @@ const LeadsPage = lazy(() => import('@/features/leads/leads-page'))
 const OpportunitiesPage = lazy(() => import('@/features/opportunities/opportunities-page'))
 const PipelinesPage = lazy(() => import('@/features/pipelines/pipelines-page'))
 const TasksPage = lazy(() => import('@/features/tasks/tasks-page'))
+const UsersPage = lazy(() => import('@/features/users/users-page'))
 
 function withSuspense(element: ReactNode) {
   return (
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           { path: '/opportunities', element: withSuspense(<OpportunitiesPage />) },
           { path: '/pipelines', element: withSuspense(<PipelinesPage />) },
           { path: '/tasks', element: withSuspense(<TasksPage />) },
+          { path: '/users', element: withSuspense(<UsersPage />) },
         ],
       },
     ],
