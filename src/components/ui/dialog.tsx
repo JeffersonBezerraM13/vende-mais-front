@@ -7,7 +7,6 @@ interface AppDialogProps extends PropsWithChildren {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  description?: ReactNode
   footer?: ReactNode
   size?: 'md' | 'lg'
 }

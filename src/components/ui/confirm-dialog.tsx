@@ -6,7 +6,6 @@ import { AppDialog } from '@/components/ui/dialog'
 interface ConfirmDialogProps {
   open: boolean
   title: string
-  description: string
   confirmLabel?: string
   tone?: 'danger' | 'primary'
   onOpenChange: (open: boolean) => void
@@ -17,7 +16,6 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   confirmLabel = 'Confirmar',
-  description,
   loading = false,
   onConfirm,
   onOpenChange,
@@ -30,7 +28,6 @@ export function ConfirmDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      description={description}
       footer={
         <>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
