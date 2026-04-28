@@ -19,7 +19,6 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { createUser, deleteUser, listUsers, updateUser } from '@/services/api/users-service'
 import { getApiErrorInfo } from '@/services/http/errors'
 import { DEFAULT_PAGE_SIZE, ROLE_LABELS, ROLE_OPTIONS } from '@/utils/constants'
-import { formatNumber } from '@/utils/format'
 import { isAdmin } from '@/utils/permissions'
 
 import type { UserFormValues } from '@/features/users/user-schema'
@@ -167,24 +166,18 @@ export default function UsersPage() {
 
       <Card>
         <div className="toolbar">
-          <div className="toolbar-filters">
-            <Badge tone="info">
-              {formatNumber(usersPage.totalElements)}{' '}
-              {usersPage.totalElements === 1 ? 'usuário' : 'usuários'}
-            </Badge>
-            <div className="search-field">
-              <Search size={16} />
-              <input
-                  className="input"
-                  placeholder="Busque por nome ou e-mail..."
-                  value={search}
-                  onChange={(event) => {
-                    setPage(0)
-                    setSearch(event.target.value)
-                  }}
-              />
-            </div>
-          </div>
+        <div className="search-field">
+          <Search size={16} />
+          <input
+              className="input"
+              placeholder="Busque por nome ou e-mail..."
+              value={search}
+              onChange={(event) => {
+                setPage(0)
+                setSearch(event.target.value)
+              }}
+          />
+        </div>
           <div className="toolbar-filters">
             <select
               className="input"

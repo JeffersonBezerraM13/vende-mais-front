@@ -60,18 +60,16 @@ export function LeadFormDialog({
     defaultValues: emptyValues,
   })
 
-  // 1. Observa o valor no nível principal do componente para o HTML enxergar
   const selectedPersonType = useWatch({ control, name: 'personType' })
   const isIndividual = selectedPersonType === 'INDIVIDUAL'
 
-  // 2. Efeito isolado APENAS para limpar a empresa se for Física
+
   useEffect(() => {
     if (isIndividual) {
-      setValue('companyName', '') // Usando string vazia para bater com o seu emptyValues
+      setValue('companyName', '')
     }
   }, [isIndividual, setValue])
 
-  // 3. Efeito isolado APENAS para gerenciar o abrir/fechar do modal e carregar os dados
   useEffect(() => {
     if (!open) {
       return
